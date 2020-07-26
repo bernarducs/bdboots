@@ -1,5 +1,6 @@
 import re
 import requests
+import numpy as np
 import pandas as pd
 
 """
@@ -15,11 +16,11 @@ info_list = list()
 
 for page in pages:
     r = requests.get(f'{MAIN_URL}{page}')
-    texto = r.text
-    sufixs = re.findall(r'cd-\w+.html', texto)
+    text = r.text
+    suffixes = re.findall(r'cd-\w+.html', text)
 
-    for i, sufix in enumerate(sufixs):
-        link = MAIN_URL + sufix
+    for i, suffix in enumerate(suffixes):
+        link = MAIN_URL + suffix
 
         if requests.get(link):
             source_code = requests.get(link).text
@@ -34,8 +35,11 @@ for page in pages:
 
             stars_raw = re.findall(r'grade.html">(.+)(\d?)\sstars\2', source_code)
             if not bool(stars_raw):
-                stars_raw = ['-']
-            stars = re.findall(r'\d+', stars_raw[0][0])
+                stars_raw = ''
+            stars_str = [re.findall(r'\d+', str(sr)) for sr in stars_raw]
+            stars_int = list(map(lambda x: [int(b) for b in x], stars_str))
+            stars_w_frac = list(map(lambda x: [(x[0] + 0.5) if b == 12 else b for b in x], stars_int))
+            stars = [np.mean(s) for s in stars_w_frac]
 
             result = [title[0], year, stars, link]
             print(i, result)
@@ -43,4 +47,5 @@ for page in pages:
             info_list.append(result)
 
 df = pd.DataFrame(info_list, columns=['title', 'year', 'stars', 'link'])
+df.to_csv('dataset.csv', index=False)
 print(df.head())
