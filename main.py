@@ -1,6 +1,6 @@
 import re
 import requests
-import numpy as np
+from numpy import mean
 import pandas as pd
 
 """
@@ -36,10 +36,10 @@ for page in pages:
             stars_raw = re.findall(r'grade.html">(.+)(\d?)\sstars\2', source_code)
             if not bool(stars_raw):
                 stars_raw = ''
-            stars_str = [re.findall(r'\d+', str(sr)) for sr in stars_raw]
-            stars_int = list(map(lambda x: [int(b) for b in x], stars_str))
+            stars_str = (re.findall(r'\d+', str(sr)) for sr in stars_raw)
+            stars_int = map(lambda x: [int(b) for b in x], stars_str)
             stars_w_frac = list(map(lambda x: [(x[0] + 0.5) if b == 12 else b for b in x], stars_int))
-            stars = [np.mean(s) for s in stars_w_frac]
+            stars = [mean(s) for s in stars_w_frac]
 
             result = [title[0], year, stars, link]
             print(i, result)
